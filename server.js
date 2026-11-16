@@ -12,6 +12,18 @@ const COURSES = [
   { id: 4, title: 'Digital Logic', credits: 5 },
 ];
 
+// ---------- Middleware ----------
+// Registered before the static files and the routes, so every request
+// passes through them first.
+
+function requestLogger(req, res, next) {
+  const time = new Date().toISOString();
+  console.log(`[${time}] ${req.method} ${req.originalUrl}`);
+  next();
+}
+
+app.use(requestLogger);
+
 // ---------- Routes ----------
 
 app.get('/hello', (req, res) => {
