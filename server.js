@@ -22,7 +22,18 @@ function requestLogger(req, res, next) {
   next();
 }
 
+// Counts every request that reaches the server: pages, static files,
+// API calls and 404s. The /api/stats request itself is counted too,
+// because the counter runs before the route that reads it.
+let requestsServed = 0;
+
+function requestCounter(req, res, next) {
+  requestsServed += 1;
+  next();
+}
+
 app.use(requestLogger);
+app.use(requestCounter);
 
 // ---------- Routes ----------
 
@@ -64,6 +75,10 @@ app.post('/api/subscribe', (req, res) => {
 
 app.get('/api/admin', (req, res) => {
   res.status(403).json({ error: 'Forbidden' });
+});
+
+app.get('/api/stats', (req, res) => {
+  res.json({ requestsServed });
 });
 
 // ---------- 404 fallback ----------
