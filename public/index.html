@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assignment 8 - My First Express Server</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>My First Express Server</h1>
+    <p>
+      This page is served by a small Node.js and Express 5 server. The same server
+      also answers the API routes below. Each button calls one route with
+      <code>fetch()</code> and shows the status code and the body that came back.
+    </p>
+  </header>
+
+  <main>
+    <section class="buttons" aria-label="API routes">
+      <button type="button" data-path="/api/courses">GET /api/courses</button>
+      <button type="button" data-path="/api/status">GET /api/status</button>
+      <button type="button" data-path="/api/headers">GET /api/headers</button>
+      <button type="button" data-path="/api/subscribe" data-method="POST">POST /api/subscribe</button>
+      <button type="button" data-path="/api/admin">GET /api/admin</button>
+      <button type="button" data-path="/api/stats">GET /api/stats</button>
+      <button type="button" data-path="/api/does-not-exist">GET /api/does-not-exist</button>
+    </section>
+
+    <section class="result" aria-live="polite">
+      <p id="status-line">Click a button to call the server.</p>
+      <pre id="output"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>CMP309 Web Programming - Assignment 8 - Abdulkader Almslem (240408933)</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

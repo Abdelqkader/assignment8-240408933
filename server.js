@@ -1,7 +1,13 @@
 import express from 'express';
+import path from 'node:path';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Absolute path of the public/ folder, built from the folder of this file
+// (not from the folder the server was started in), so `node server.js`
+// works from anywhere.
+const PUBLIC_DIR = path.join(import.meta.dirname, 'public');
 
 // ---------- Data ----------
 
@@ -35,7 +41,15 @@ function requestCounter(req, res, next) {
 app.use(requestLogger);
 app.use(requestCounter);
 
+// ---------- Static files ----------
+
+app.use(express.static(PUBLIC_DIR));
+
 // ---------- Routes ----------
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+});
 
 app.get('/hello', (req, res) => {
   res.send("Hello from Abdulkader's server");
