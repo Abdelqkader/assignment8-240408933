@@ -73,3 +73,137 @@ Both middleware functions are registered with `app.use()` at the top, before
   "requests served" and the server really did answer all of them, including the 404s.
   If I wanted to count only API calls, I would register the counter with
   `app.use('/api', requestCounter)` or move it below `express.static`.
+
+## Testing Evidence (curl)
+
+All of these were run with the server started by `npm start` on port 3000.
+
+### 1. Successful JSON response
+
+```text
+$ curl --include http://localhost:3000/api/courses
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 201
+ETag: W/"c9-z24NafDW+/bINpdsoBlFOe+q0pY"
+Date: Mon, 16 Nov 2026 09:52:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+[{"id":1,"title":"Web Programming","credits":6},{"id":2,"title":"Operating Systems","credits":6},{"id":3,"title":"Database Management Systems","credits":5},{"id":4,"title":"Digital Logic","credits":5}]
+```
+
+### 2. The 201 response
+
+```text
+$ curl --include -X POST http://localhost:3000/api/subscribe
+HTTP/1.1 201 Created
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 19
+ETag: W/"13-oWAPIqDXuocNexKhPYW9ayyk98c"
+Date: Mon, 16 Nov 2026 09:52:48 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"subscribed":true}
+```
+
+### 3. The 403 response
+
+```text
+$ curl --include http://localhost:3000/api/admin
+HTTP/1.1 403 Forbidden
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 21
+ETag: W/"15-TLNzmZqKxaTuFdX/dVWWPBu44/c"
+Date: Mon, 16 Nov 2026 09:52:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"error":"Forbidden"}
+```
+
+### 4. The redirect
+
+```text
+$ curl --include http://localhost:3000/old-page
+HTTP/1.1 302 Found
+X-Powered-By: Express
+Location: /hello
+Vary: Accept
+Content-Type: text/plain; charset=utf-8
+Content-Length: 28
+Date: Mon, 16 Nov 2026 09:52:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+Found. Redirecting to /hello
+```
+
+### 5. 404 on an /api path
+
+```text
+$ curl --include http://localhost:3000/api/nothing-here
+HTTP/1.1 404 Not Found
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 21
+ETag: W/"15-bm7tJgu8FHlq5QU+Y6gDxOGPfRc"
+Date: Mon, 16 Nov 2026 09:52:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"error":"Not found"}
+```
+
+### 6. 404 on a non-API path
+
+```text
+$ curl --include http://localhost:3000/missing-page
+HTTP/1.1 404 Not Found
+X-Powered-By: Express
+Content-Type: text/html; charset=utf-8
+Content-Length: 77
+ETag: W/"4d-BYAjNI8HpWWTKDOPpdge/k3bTSw"
+Date: Mon, 16 Nov 2026 09:52:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+<h1>404 - Page not found</h1><p>Go back to <a href="/">the home page</a>.</p>
+```
+
+### 7. Plain-text content type (robots.txt)
+
+```text
+$ curl --include http://localhost:3000/robots.txt
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: text/plain; charset=utf-8
+Content-Length: 30
+ETag: W/"1e-fz6IoKfWOEcSop5pxzp50fKiI7Q"
+Date: Mon, 16 Nov 2026 09:52:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+User-agent: *
+Disallow: /api/
+```
+
+### 8. Real values from the process (/api/status)
+
+```text
+$ curl --include http://localhost:3000/api/status
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 59
+ETag: W/"3b-vX+Og1YZP1fXNYBWYUuwS7XmF2M"
+Date: Mon, 16 Nov 2026 09:52:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"status":"ok","nodeVersion":"v24.21.0","uptimeSeconds":30}
+```
