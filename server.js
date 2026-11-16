@@ -54,6 +54,19 @@ app.get('/api/admin', (req, res) => {
   res.status(403).json({ error: 'Forbidden' });
 });
 
+// ---------- 404 fallback ----------
+// Registered with app.use() AFTER every route, so it only runs when
+// nothing above sent a response. No path pattern means "match anything"
+// (Express 5 no longer accepts the old app.get('*') style).
+
+app.use((req, res) => {
+  if (req.path.startsWith('/api')) {
+    res.status(404).json({ error: 'Not found' });
+  } else {
+    res.status(404).send('<h1>404 - Page not found</h1><p>Go back to <a href="/">the home page</a>.</p>');
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
