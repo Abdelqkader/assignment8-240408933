@@ -76,7 +76,7 @@ Both middleware functions are registered with `app.use()` at the top, before
 
 ## Testing Evidence (curl)
 
-All of these were run with the server started by `npm start` on port 3000.
+All of these were run against the server running on port 3000 (the default port).
 
 ### 1. Successful JSON response
 
@@ -207,3 +207,57 @@ Keep-Alive: timeout=5
 
 {"status":"ok","nodeVersion":"v24.21.0","uptimeSeconds":30}
 ```
+
+## Reasoning Questions
+
+### 1. Route order
+
+I moved the whole 404 fallback (`app.use((req, res) => { ... })`) above the routes and ran
+the server again. `/hello` and `/api/courses` now returned **404**, because Express checks
+middleware and routes from top to bottom, and a fallback with no path matches every request,
+so it answered first and the real routes never ran. Interestingly `/` and `/styles.css` still
+worked (200), because `express.static` is registered before the place where I moved the
+fallback, so the static files were found first. That is why the fallback must be the very
+last thing before `app.listen`.
+
+### 2. Middleware
+
+I commented out `next()` in the logger and opened `/hello`. The server printed the log line
+`[2026-11-16T09:52:13.797Z] GET /hello`, but nothing else happened: the browser kept loading
+(the tab spinner never stopped) and `curl` waited until my 5 second timeout with no response.
+The logger was the last thing that ran, and since it neither sent a response nor called
+`next()`, the request was stuck there forever and the route never got the request.
+
+### 3. Status codes
+
+201 means "Created": the request worked **and** something new was made on the server (a new
+subscription), which is more exact than a plain 200 "OK". A missing page must be a 404,
+because the status code is what programs read, not the text. Browsers, `fetch` (`response.ok`),
+search engines and monitoring tools would treat a 200 with an error message as a real, working
+page, for example a search engine could index it.
+
+### 4. Configuration
+
+The port is decided by the place where the app runs, not by the code. A hosting service
+(Render, Railway, Heroku, ...) gives the app a port in the `PORT` environment variable, and on my
+own computer 3000 may already be used by another app (my Vite or React projects). With
+`process.env.PORT || 3000` the same code works everywhere without editing it, and 3000 is only
+the fallback for local development.
+
+### 5. Dependencies
+
+`node_modules` is very big, it is different for each operating system, and it can be
+rebuilt exactly from `package.json` and `package-lock.json`, so committing it only makes the
+repository heavy. A teammate must clone the repository, run `npm install` (or `npm ci` to get
+exactly the versions in the lock file) in the project folder, and then `npm start`.
+
+### 6. Same origin
+
+When the page is opened through the server, a relative URL like `fetch('/api/courses')` goes to
+the same server that sent the page. If I open `index.html` directly from disk
+(`file:///.../public/index.html`), the relative URL becomes `file:///api/courses`, which does not
+exist, so the buttons fail. Even with a full URL like `http://localhost:3000/api/courses`, a
+page from `file://` has a different (`null`) origin, and the browser blocks reading the
+response. This restriction is called the **Same-Origin Policy**, and the way a server can allow
+other origins is **CORS** (which we were not allowed to use here, and do not need, because the
+page and the API come from the same server).
