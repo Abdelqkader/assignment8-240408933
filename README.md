@@ -261,3 +261,37 @@ page from `file://` has a different (`null`) origin, and the browser blocks read
 response. This restriction is called the **Same-Origin Policy**, and the way a server can allow
 other origins is **CORS** (which we were not allowed to use here, and do not need, because the
 page and the API come from the same server).
+
+## Self-Study Notes
+
+- **Node version and running time** — the Node documentation for the global `process` object
+  has `process.version` (a string like `"v24.21.0"`) and `process.uptime()` (seconds since the
+  process started, as a decimal). I used both in `/api/status` and rounded the uptime with
+  `Math.round()`.
+- **Plain-text content type** — in the Express 5 docs, `res.type('text/plain')` sets the
+  `Content-Type` header (Express adds `charset=utf-8`). I call it before `res.send()` in
+  `/robots.txt`; without it, `res.send()` with a string would answer as `text/html`.
+- **Pretty JSON in the page** — `JSON.stringify(value, null, 2)` (MDN): the third argument is the
+  indentation. In `app.js` I read the body with `response.text()`, try `JSON.parse`, and if
+  that works I show it with 2-space indentation; if it fails (HTML 404 page) I show the text
+  as it is. Reading as text first means the page never crashes on a non-JSON body.
+- **Path of `public/` from any folder** — `import.meta.dirname` (Node docs, ES modules) gives
+  the folder of the current file, the ES-module replacement for `__dirname`. I join it with
+  `'public'` for `express.static` and `res.sendFile`, so the server works when started from
+  any folder.
+- **Request headers** — `req.get('User-Agent')` from the Express docs reads a header without
+  caring about upper or lower case.
+- **The 404 fallback in Express 5** — the migration guide explains that `'*'` is no longer a valid
+  path. `app.use()` with no path matches every request, so I used that as the last handler.
+
+## Challenges
+
+- My first test of the API routes returned 404 for everything. The cause was an older copy of
+  the server still running on the same port, so I was testing the old code. After stopping it
+  the routes worked. Now I always check that only one server is running.
+- At first I was not sure where to put `express.static`. If it is after the routes, `/` would
+  need its own route; if it is before, the static files are found first. I put it after the
+  middleware (so static files are logged and counted) and before the routes.
+- In `app.js` I first used `response.json()`, but the HTML 404 page made it throw. Reading with
+  `response.text()` and then trying `JSON.parse` fixed that.
+- Deciding what the counter should count: I documented my choice (everything) above.
